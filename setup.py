@@ -5,9 +5,9 @@ from setuptools import setup, find_packages
 setup(
   name="enviopack",
   version=VERSION,
-  url="https://github.com/kiwidamien/roman",
+  url="https://github.com/fedegobea/enviopack",
   author=AUTHOR,
-  author_email="fgobeagit@gmail.com",
+  author_email="gitfgobea@gmail.com",
   description="Integration Helper with enviopack",
   long_description=open('README.md').read(),
   packages=find_packages(),

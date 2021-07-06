@@ -3,12 +3,33 @@
 Base class for enviopack integration, common features for all modules
 """
 from enviopack.constants import BASE_API_URL
+from enviopack import Auth
 
 class Enviopack:
   _name = "Abstract class which contains url and other integration methods"
 
+  auth:Auth
   base_request_url:str = BASE_API_URL
   base_request_path:str = '/'
+
+  def __init__(self, auth:Auth, base_url=BASE_API_URL, base_path=None,  **kwargs):
+    self.auth = auth
+    for arg,value in kwargs.items():
+      if value:
+        setattr(self, arg, value)
+    self.base_request_url = base_url
+    if base_path:
+      self.base_request_path = base_path
+
+  def _set_attributes_from_response(self, vals:dict, mapping:dict):
+    """
+    @vals dict which contains the values with the response params as keys
+    @mapping dict that contains the keys from the response that correspond to the object
+    """
+    for key,value in vals.items():
+      object_key = mapping.get(key,False)
+      if object_key:
+        setattr(self, object_key, value)
 
   def _optional_params(self, mandatory_params:dict, optional_fields:dict) -> dict:
     """

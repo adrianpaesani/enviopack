@@ -11,8 +11,7 @@ class Quote(Enviopack):
   """
   _name = "Quote orders"
 
-  auth:Auth 
-  "Auth Object with access token"
+
   state:str 
   "ID Provincia: Deberá informarse el valor ID devuelto por el webservice de provincias. Los IDs de provincias están bajo el estándar ISO_3166-2:AR sin el prefijo AR-."
   city:int 
@@ -74,7 +73,7 @@ class Quote(Enviopack):
     order_way:str=False
 
     """
-    self.auth = auth
+    super(self,Quote).__init__(auth)
     self.state = state 
     self.zip_code = zip_code 
     self.weight = weight 
@@ -86,7 +85,7 @@ class Quote(Enviopack):
     self.base_request_path = base_path
 
   def __repr__(self):
-    return '(Order: weight {weight}, state {state}, zip_code {zip_code})'.format(weight=self.weight,state=self.state, zip_code=self.zip_code)
+    return '(Quote: weight {weight}, state {state}, zip_code {zip_code})'.format(weight=self.weight,state=self.state, zip_code=self.zip_code)
 
   def quote_cost(self) -> dict:
     """
