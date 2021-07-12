@@ -56,7 +56,7 @@ class Orders(Enviopack):
   pickings:List[Pickings]
 
   def __init__(self, auth:Auth, base_path=base_path, **kwargs):
-    super(self, Orders).__init__(auth)
+    super(self, Orders).__init__(auth, **kwargs)
     
 
   def __repr__(self):
@@ -99,7 +99,7 @@ class Orders(Enviopack):
     return order
 
   @classmethod
-  def searh_orders(cls,auth, from_create_date=None, to_create_date=None, external_id=None, page=None ):
+  def search_orders(cls,auth, from_create_date=None, to_create_date=None, external_id=None, page=None ):
     """
     GET /pedidos
       Permite buscar por diversos parametros sobre el listado de pedidos"""

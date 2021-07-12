@@ -5,7 +5,7 @@ from enviopack.constants import BASE_API_URL
 from enviopack import Auth
 from enviopack.Orders.Orders import Orders
 from typing import List
-
+import json
 base_path='/envios'
 
 class Pickings(Enviopack):
@@ -183,16 +183,16 @@ class Pickings(Enviopack):
     picking.packages = packages
     if 'products' in kwargs:
       raise Exception('Use create_with_products constructor to use products')
-    #TODO add packages
-    pass
+    packagejson = json.dumps(packages)
+    
     return picking
   
   def confirm(self, sender_address, has_fullfilment, dispatch, service, **kwargs):
     #todo add request to confirm picking
     self.sender_address, self.has_fullfilment, self.dispatch, self.service = sender_address, has_fullfilment, dispatch, service
-    if mode == 'D':
+    if self.mode == 'D':
       self.send_to_address()
-    elif mode == 'S':
+    elif self.mode == 'S':
       post_office = kwargs.get('post_office',False)
       if post_office:
         self.send_to_post_office(post_office)
