@@ -3,16 +3,16 @@
 Base class for enviopack integration, common features for all modules
 """
 from enviopack.constants import BASE_API_URL
-from enviopack import Auth
+# from enviopack import Auth
 
 class Enviopack:
   _name = "Abstract class which contains url and other integration methods"
 
-  auth:Auth
+  
   base_request_url:str = BASE_API_URL
   base_request_path:str = '/'
 
-  def __init__(self, auth:Auth, base_url=BASE_API_URL, base_path=None,  **kwargs):
+  def __init__(self, auth, base_url=BASE_API_URL, base_path=None,  **kwargs):
     self.auth = auth
     for arg,value in kwargs.items():
       if value:

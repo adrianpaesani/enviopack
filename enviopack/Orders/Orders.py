@@ -35,7 +35,7 @@ class Orders(Enviopack):
   empresa	No	ID	Este parámetro solo esta disponible para cuentas marketplaces. Permite crear un pedido en la cuenta de un seller y asociado a la cuenta marketplace.
   Te recomendamos revisar la sección Marketplaces en esta API Docs.
   """
-  id
+  id:int
   external_id:str
   name:str
   last_name:str
@@ -53,10 +53,10 @@ class Orders(Enviopack):
   response:dict
   company:int
 
-  pickings:List[Pickings]
+  # pickings:List[Pickings]
 
   def __init__(self, auth:Auth, base_path=base_path, **kwargs):
-    super(self, Orders).__init__(auth, **kwargs)
+    super().__init__(auth, base_path=base_path, **kwargs)
     
 
   def __repr__(self):
@@ -167,14 +167,14 @@ class Orders(Enviopack):
     self.pickings = pickings
     return pickings
   
-  def __del__(self):
-    """
-    DELETE /pedidos/[ID]
-    """
-    url = "{base_url}{base_path}/{id}".format(base_url=self.base_request_url, base_path=self.base_request_path,id=self.id )
-    response = delete(url, {'access_token':self.auth.access_token})
-    del self
-    return response.json()
+  # def __del__(self):
+  #   """
+  #   DELETE /pedidos/[ID]
+  #   """
+  #   url = "{base_url}{base_path}/{id}".format(base_url=self.base_request_url, base_path=self.base_request_path,id=self.id )
+  #   response = delete(url, {'access_token':self.auth.access_token})
+  #   del self
+  #   return response.json()
 
   def _post_order(self) -> dict:
     """
@@ -204,8 +204,10 @@ class Orders(Enviopack):
       "company":"empresa",
       })
 
-    response = post(url,{'access_token':access_token,} ,params)
+    response = post(url,params={'access_token':access_token,} ,json=params)
+    rspjson = response.json()
     if response.status_code == 200:
-      return response.json()
+      self.id = rspjson.get('id')
+      return rspjson
     else:
-      raise Exception('El pedido no se pudo crear, revisar los parametros utilizados')
+      raise Exception(f'El pedido no se pudo crear, revisar los parametros utilizados: \n {rspjson}')

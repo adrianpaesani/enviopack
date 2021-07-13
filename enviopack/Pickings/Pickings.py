@@ -4,7 +4,7 @@ from enviopack import Enviopack
 from enviopack.constants import BASE_API_URL
 from enviopack import Auth
 from enviopack.Orders.Orders import Orders
-from typing import List
+from typing import Dict, List
 import json
 base_path='/envios'
 
@@ -129,31 +129,31 @@ class Pickings(Enviopack):
   service:str 
   dispatch:str
   has_fullfilment:bool
+  receiver:str
 
+  observations:str  = False
+  uses_insurance:bool = None
 
-  observations:str 
-  uses_insurance:bool
-
-  products:List[dict]
-  packages:List[dict]
+  products:List[dict] = False
+  packages:List[dict] = False
   
-  carrier:int
+  carrier:int 
   street:str 
-  number:str 
-  zip_code:int
+  st_number:str 
+  zip_code:int 
   state:str 
   city:str 
   
-  floor:str 
-  apartment:str
-  address_reference:str 
+  floor:str  = None
+  apartment:str = None
+  address_reference:str = None
 
   post_office:int  
 
   response:dict
 
   def __init__(self, auth, order, confirmed, mode, base_path=base_path, **kwargs):
-    super(self, Pickings).__init__(auth, **kwargs)
+    super().__init__(auth, base_path=base_path,**kwargs)
     if 'packages' in kwargs and 'products' in kwargs:
        raise Exception('Please use either packages or products')
     self.order, self.confirmed, self.mode = order, confirmed, mode
@@ -177,29 +177,125 @@ class Pickings(Enviopack):
     return picking
   
   @classmethod
-  def create_with_packages(cls, auth, order, confirmed, mode, packages, **kwargs):
+  def create_with_packages(cls, auth, order, confirmed:bool, mode:str, packages:List[dict], **kwargs):
+    """
+    @auth
+    @order
+    @confirmed
+    @mode
+    @packages
+    
+    If confirmed True the following params must be set
+    @sender_address 
+    @has_fullfilment
+    @dispatch
+    @service
+    @receiver
+    """
     #todo add request to create picking
-    picking = cls(auth, order, confirmed, mode)
+    picking = cls(auth, order, confirmed, mode, **kwargs)
     picking.packages = packages
     if 'products' in kwargs:
       raise Exception('Use create_with_products constructor to use products')
-    packagejson = json.dumps(packages)
-    
+    if confirmed:
+      sender_address, has_fullfilment, dispatch, service, receiver = kwargs.get('sender_address'),kwargs.get('has_fullfilment'),kwargs.get('dispatch'),kwargs.get('service'),kwargs.get('receiver')
+      if not all([sender_address, dispatch, service, receiver]):
+        raise Exception('You need to set all of the following params: sender_address, has_fullfilment, dispatch, service, receiver')
+      picking.confirm(sender_address, has_fullfilment, dispatch, service, receiver, post_office=kwargs.get('post_office',False))
+    else:
+      picking._post_picking(post_office=kwargs.get('post_office',False))
     return picking
   
-  def confirm(self, sender_address, has_fullfilment, dispatch, service, **kwargs):
-    #todo add request to confirm picking
-    self.sender_address, self.has_fullfilment, self.dispatch, self.service = sender_address, has_fullfilment, dispatch, service
+
+  def confirm(self, sender_address, has_fullfilment, dispatch, service, receiver, post_office=False):
+    self.sender_address, self.has_fullfilment, self.dispatch, self.service, self.receiver = sender_address, has_fullfilment, dispatch, service, receiver
+    self._post_picking(post_office)
+
+  def _post_picking(self,post_office=False):
     if self.mode == 'D':
       self.send_to_address()
     elif self.mode == 'S':
-      post_office = kwargs.get('post_office',False)
-      if post_office:
         self.send_to_post_office(post_office)
-      else:
-        raise Exception('To use mode S you need to add post_office argument')
     else: 
       raise Exception(f'Unsupported mode {self.mode}')
+
+    
   
+  def _base_params(self):
+    #TODO refactor this
+    params = {
+      'pedido':self.order.id,
+      'confirmado':self.confirmed,
+      'modalidad':self.mode
+    }
+    if self.confirmed:
+      params.update({
+        'destinatario':self.receiver or (f"{self.order.name} {self.order.last_name}"),
+        'tiene_fulfillment':self.has_fullfilment,
+        'despacho':self.dispatch,
+        'servicio': self.service
+      })
+    if self.has_fullfilment and self.products:
+      params.update({
+        'productos':json.dumps(self.products)
+      })
+    else:
+      params.update({
+        'paquetes':json.dumps(self.packages)
+      })
+    if self.observations:
+      params.update({
+        'observaciones':self.observations
+      })
+    if self.uses_insurance:
+      params.update({
+        'usa_seguro':self.uses_insurance
+      })
+      
+    return params
+
+
   def send_to_post_office(self, post_office):
-    pass
+    if not post_office:
+        raise Exception('To use mode S you need to add post_office argument')
+    params = self._base_params()
+    params.update({
+      'post_office':post_office
+    })
+    url = "{base_url}{base_path}".format(base_url=self.base_request_url, base_path=self.base_request_path)
+    response = requests.post(url, params={'access_token':self.access_token},json=params)
+    respjson = response.json()
+    self.response = respjson
+    if response.status_code == 200:
+      return respjson
+    else: raise Exception('La solicitud fallo por favor revise los parametros')
+
+  def send_to_address(self):
+    params = self._base_params()
+    try:
+      params.update({
+      'direccion_envio': self.sender_address,
+      'correo': self.carrier,
+      'calle': self.street,
+      'numero': self.st_number,
+      'codigo_postal': self.zip_code,
+      'provincia': self.state,
+      'localidad': self.city
+      })
+    except:
+      raise Exception('All of the next attributes must be set to send with mode "D" carrier, street, st_number, zip_code, state, city')
+
+    if self.floor:
+      params['piso'] = self.floor
+    if self.floor:
+      params['depto'] = self.apartment
+    if self.floor:
+      params['referencia_domicilio'] = self.address_reference
+    
+    url = "{base_url}{base_path}".format(base_url=self.base_request_url, base_path=self.base_request_path)
+    response = requests.post(url, params={'access_token':self.auth.access_token},json=params)
+    respjson = response.json()
+    self.response = respjson
+    if response.status_code == 200:
+      return respjson
+    else: raise Exception(f'La solicitud fallo por favor revise los parametros \n {respjson}')

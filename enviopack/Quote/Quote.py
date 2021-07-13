@@ -120,19 +120,19 @@ class Quote(Enviopack):
     else:
       raise Exception('El pedido de costo fallo, revisar los parametros utilizados')
     
-    def quote_price_to_address(self):
-      """
-        GET /cotizar/precio/a-domicilio
-        Permite obtener un listado de cotizaciones brindando en cada una de ellas el valor que comprador va a pagar por el envío a domicilio.
-        Los valores devueltos por este webservice pueden ser modificados desde la sección correos y tarifas para cada servicio en particular.
-      """
-      raise NotImplementedError
+  def quote_price_to_address(self):
+    """
+      GET /cotizar/precio/a-domicilio
+      Permite obtener un listado de cotizaciones brindando en cada una de ellas el valor que comprador va a pagar por el envío a domicilio.
+      Los valores devueltos por este webservice pueden ser modificados desde la sección correos y tarifas para cada servicio en particular.
+    """
+    raise NotImplementedError
 
-    def quote_price_to_post_office(self):
-      """
-        GET /cotizar/precio/a-sucursal
-        Permite obtener un listado de cotizaciones brindando en cada una de ellas el valor que el comprador va a pagar por un envío a sucursal, retornando ademas toda la información de cada sucursal elegible.
-        Este webservice esta diseñado para que tu comprador en el checkout de tu aplicación pueda cotizar y elegir en tiempo real en que sucursal quiere recibir su pedido.
-        Los valores devueltos por este webservice pueden ser modificados desde la sección correos y tarifas para cada correo en particular.
-      """
-      raise NotImplementedError
+  def quote_price_to_post_office(self):
+    """
+      GET /cotizar/precio/a-sucursal
+      Permite obtener un listado de cotizaciones brindando en cada una de ellas el valor que el comprador va a pagar por un envío a sucursal, retornando ademas toda la información de cada sucursal elegible.
+      Este webservice esta diseñado para que tu comprador en el checkout de tu aplicación pueda cotizar y elegir en tiempo real en que sucursal quiere recibir su pedido.
+      Los valores devueltos por este webservice pueden ser modificados desde la sección correos y tarifas para cada correo en particular.
+    """
+    raise NotImplementedError
