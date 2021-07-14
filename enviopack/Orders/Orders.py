@@ -63,22 +63,22 @@ class Orders(Enviopack):
     return '(Order: name {name}, amount {amount})'.format(name=self.name + ' ' + self.last_name, amount=self.amount)
 
   @classmethod
-  def create_order(cls, auth:Auth, external_id:str, name:str, last_name:str, email:str, amount:float, create_date:str, payed:bool, **kwargs):
+  def create(cls, auth:Auth, external_id:str, name:str, last_name:str, email:str, amount:float, create_date:str, payed:bool, **kwargs):
     order = cls(auth, **kwargs)
-    order.external_id:str = external_id
-    order.name:str = name
-    order.last_name:str = last_name
-    order.email:str = email
-    order.amount:float = amount
-    order.create_date:str = create_date
-    order.payed:bool = payed
+    order.external_id = external_id
+    order.name = name
+    order.last_name = last_name
+    order.email = email
+    order.amount = amount
+    order.create_date = create_date
+    order.payed = payed
     order.response = order._post_order()
     return order
   
   @classmethod
-  def get_order(cls, auth:Auth, id:int):
+  def get(cls, auth:Auth, id:int):
     order = cls(auth)
-    order_vals = order.get_order_by_id(id, auth.access_token)
+    order_vals = order.get_by_id(id, auth.access_token)
     
     order._set_attributes_from_response(order_vals, {
     "empresa":'company',
@@ -99,7 +99,7 @@ class Orders(Enviopack):
     return order
 
   @classmethod
-  def search_orders(cls,auth, from_create_date=None, to_create_date=None, external_id=None, page=None ):
+  def search(cls,auth, from_create_date=None, to_create_date=None, external_id=None, page=None ):
     """
     GET /pedidos
       Permite buscar por diversos parametros sobre el listado de pedidos"""
@@ -143,7 +143,7 @@ class Orders(Enviopack):
     }) for order in orders]
 
   @staticmethod
-  def get_order_by_id(id, access_token) -> dict:
+  def get_by_id(id, access_token) -> dict:
     """
     GET /pedidos/[ID]
     """
@@ -151,7 +151,7 @@ class Orders(Enviopack):
     response = get(url, {'access_token':access_token})
     return response.json()
   
-  def get_order_pickings(self):
+  def get_pickings(self):
     """
     GET /pedidos/[ID]/envios
     """
@@ -159,22 +159,29 @@ class Orders(Enviopack):
     if pickings:
       return pickings
     url = "{base_url}{base_path}/{id}/envios".format(base_url=self.base_request_url, base_path=self.base_request_path,id=self.id )
-    raise NotImplementedError
-    #TODO finish when implemented pickings
     response = get(url, {'access_token':self.auth.access_token})
     pickings_json = response.json()
     pickings = Pickings.from_array(pickings_json)
     self.pickings = pickings
     return pickings
   
-  # def __del__(self):
-  #   """
-  #   DELETE /pedidos/[ID]
-  #   """
-  #   url = "{base_url}{base_path}/{id}".format(base_url=self.base_request_url, base_path=self.base_request_path,id=self.id )
-  #   response = delete(url, {'access_token':self.auth.access_token})
-  #   del self
-  #   return response.json()
+  def delete(self):
+    """
+    DELETE /pedidos/[ID]
+    """
+    url = "{base_url}{base_path}/{id}".format(base_url=self.base_request_url, base_path=self.base_request_path,id=self.id )
+    response = delete(url, {'access_token':self.auth.access_token})
+    del self
+    return response.json()
+  
+  @staticmethod
+  def delete_by_id(id, auth):
+    """
+    DELETE /pedidos/[ID]
+    """
+    url = "{base_url}{base_path}/{id}".format(base_url=BASE_API_URL, base_path=base_path,id=id )
+    response = delete(url, {'access_token':auth.access_token})
+    return response.json()
 
   def _post_order(self) -> dict:
     """
@@ -205,6 +212,7 @@ class Orders(Enviopack):
       })
 
     response = post(url,params={'access_token':access_token,} ,json=params)
+    self.raw_response = response
     rspjson = response.json()
     if response.status_code == 200:
       self.id = rspjson.get('id')

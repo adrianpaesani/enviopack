@@ -87,7 +87,7 @@ class Quote(Enviopack):
   def __repr__(self):
     return '(Quote: weight {weight}, state {state}, zip_code {zip_code})'.format(weight=self.weight,state=self.state, zip_code=self.zip_code)
 
-  def quote_cost(self) -> dict:
+  def cost(self) -> dict:
     """
     GET /cotizar/costo
     Obtener el costo que abona el vendedor por el envío 
@@ -120,7 +120,7 @@ class Quote(Enviopack):
     else:
       raise Exception('El pedido de costo fallo, revisar los parametros utilizados')
     
-  def quote_price_to_address(self):
+  def price_to_address(self):
     """
       GET /cotizar/precio/a-domicilio
       Permite obtener un listado de cotizaciones brindando en cada una de ellas el valor que comprador va a pagar por el envío a domicilio.
@@ -128,7 +128,7 @@ class Quote(Enviopack):
     """
     raise NotImplementedError
 
-  def quote_price_to_post_office(self):
+  def price_to_post_office(self):
     """
       GET /cotizar/precio/a-sucursal
       Permite obtener un listado de cotizaciones brindando en cada una de ellas el valor que el comprador va a pagar por un envío a sucursal, retornando ademas toda la información de cada sucursal elegible.

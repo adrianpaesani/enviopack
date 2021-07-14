@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import requests
+from requests import get
 from enviopack import Enviopack
 from enviopack.constants import BASE_API_URL
 from enviopack import Auth
@@ -152,12 +153,17 @@ class Pickings(Enviopack):
 
   response:dict
 
-  def __init__(self, auth, order, confirmed, mode, base_path=base_path, **kwargs):
+  def __init__(self, auth, base_path=base_path, **kwargs):
     super().__init__(auth, base_path=base_path,**kwargs)
     if 'packages' in kwargs and 'products' in kwargs:
-       raise Exception('Please use either packages or products')
-    self.order, self.confirmed, self.mode = order, confirmed, mode
+      raise Exception('Please use either packages or products')
   
+  @classmethod
+  def create(cls, auth, order, confirmed, mode, **kwargs):
+    picking = cls(auth, **kwargs)
+    picking.order, picking.confirmed, picking.mode = order, confirmed, mode
+    return picking 
+
   def __repr__(self):
     return '(Picking: order {order}, confirmed {confirmed})'.format(order=self.order.id, confirmed=self.confirmed)
 
@@ -168,7 +174,7 @@ class Pickings(Enviopack):
   @classmethod
   def create_with_products(cls, auth, order, confirmed, mode, products, **kwargs):
     #todo add request to create picking
-    picking = cls(auth, order, confirmed, mode)
+    picking = cls.create(auth, order, confirmed, mode)
     picking.products = products
     if 'packages' in kwargs:
       raise Exception('Use create_with_packages constructor to use packages')
@@ -193,7 +199,7 @@ class Pickings(Enviopack):
     @receiver
     """
     #todo add request to create picking
-    picking = cls(auth, order, confirmed, mode, **kwargs)
+    picking = cls.create(auth, order, confirmed, mode, **kwargs)
     picking.packages = packages
     if 'products' in kwargs:
       raise Exception('Use create_with_products constructor to use products')
@@ -254,6 +260,19 @@ class Pickings(Enviopack):
       
     return params
 
+  @classmethod
+  def get(cls, id, auth):
+    url = "{base_url}{base_path}/{id}".format(base_url=cls.base_request_url, base_path=cls.base_request_path, id=id)
+    response = get(url, params={'access_token':auth.access_token})
+    #TODO map resoponse to json
+    picking = cls(auth, **response.json())
+    picking.response = response.json()
+    return picking
+
+  def get_conditions(self):
+    url = "{base_url}{base_path}/{endpoint}".format(base_url=self.base_request_url, base_path=self.base_request_path, endpoint='condiciones')
+    response = get(url, params={'access_token':self.auth.access_token})
+    return response.json()
 
   def send_to_post_office(self, post_office):
     if not post_office:
@@ -294,8 +313,31 @@ class Pickings(Enviopack):
     
     url = "{base_url}{base_path}".format(base_url=self.base_request_url, base_path=self.base_request_path)
     response = requests.post(url, params={'access_token':self.auth.access_token},json=params)
+    self.raw_response = response
+    print(response.request.body)
     respjson = response.json()
     self.response = respjson
     if response.status_code == 200:
       return respjson
     else: raise Exception(f'La solicitud fallo por favor revise los parametros \n {respjson}')
+
+  def label_pdf(self):
+    url = "{base_url}{base_path}/{id}/etiqueta".format(base_url=self.base_request_url, base_path=self.base_request_path, id=self.id)
+    response = get(url,params={'access_token':self.auth.access_token, 'formato':'pdf'})
+    return response.json()
+
+  def label_jpg(self, bulto):
+    url = "{base_url}{base_path}/{id}/etiqueta".format(base_url=self.base_request_url, base_path=self.base_request_path, id=self.id)
+    response = get(url,params={'access_token':self.auth.access_token, 'formato':'pdf', 'bulto':bulto})
+    return response.json()
+  
+  @staticmethod
+  def labels(ids, auth):
+    url = "{base_url}{base_path}/etiquetas".format(base_url=Pickings.base_request_url, base_path=Pickings.base_request_path)
+    response = get(url,params={'access_token':auth.access_token, 'ids':ids})
+    return response.json()
+
+  def tracking(self):
+    url = "{base_url}{base_path}/{id}/tracking".format(base_url=self.base_request_url, base_path=self.base_request_path, id=self.id)
+    response = get(url,params={'access_token':self.auth.access_token})
+    return response.json()

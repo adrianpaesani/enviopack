@@ -3,7 +3,6 @@
 Base class for enviopack integration, common features for all modules
 """
 from enviopack.constants import BASE_API_URL
-# from enviopack import Auth
 
 class Enviopack:
   _name = "Abstract class which contains url and other integration methods"
