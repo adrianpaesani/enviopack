@@ -6,7 +6,6 @@ from enviopack.constants import BASE_API_URL
 from enviopack import Auth
 from enviopack.Orders.Orders import Orders
 from typing import Dict, List
-import json
 base_path='/envios'
 
 class Pickings(Enviopack):
@@ -243,11 +242,11 @@ class Pickings(Enviopack):
       })
     if self.has_fullfilment and self.products:
       params.update({
-        'productos':json.dumps(self.products)
+        'productos':self.products
       })
     else:
       params.update({
-        'paquetes':json.dumps(self.packages)
+        'paquetes':self.packages
       })
     if self.observations:
       params.update({

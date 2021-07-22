@@ -73,7 +73,7 @@ class Quote(Enviopack):
     order_way:str=False
 
     """
-    super(self,Quote).__init__(auth)
+    super(Quote,self).__init__(auth)
     self.state = state 
     self.zip_code = zip_code 
     self.weight = weight 
