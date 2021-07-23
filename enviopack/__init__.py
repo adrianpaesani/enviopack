@@ -5,6 +5,6 @@ from .Quote.Quote import Quote
 from .Pickings.Pickings import Pickings
 from .Orders.Orders import Orders
 
-__version__ = "0.4.0"
+__version__ = "0.4.2"
 __author__ = "Federico Gobea"
 
