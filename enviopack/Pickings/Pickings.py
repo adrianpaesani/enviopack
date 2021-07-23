@@ -317,7 +317,7 @@ class Pickings(Enviopack):
     print(response.request.body)
     respjson = response.json()
     self.response = respjson
-    self.id = respjson['id']
+    self.id = respjson.get('id',False)
     if response.status_code == 200:
       return respjson
     else: raise Exception(f'La solicitud fallo por favor revise los parametros \n {respjson}')
