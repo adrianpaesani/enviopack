@@ -160,6 +160,8 @@ class Orders(Enviopack):
       return pickings
     url = "{base_url}{base_path}/{id}/envios".format(base_url=self.base_request_url, base_path=self.base_request_path,id=self.id )
     response = get(url, {'access_token':self.auth.access_token})
+    self.raw_response = response
+    self.raw_request = response.request
     pickings_json = response.json()
     pickings = Pickings.from_array(pickings_json)
     self.pickings = pickings
@@ -213,6 +215,7 @@ class Orders(Enviopack):
 
     response = post(url,params={'access_token':access_token,} ,json=params)
     self.raw_response = response
+    self.raw_request = response.request
     rspjson = response.json()
     if response.status_code == 200:
       self.id = rspjson.get('id')

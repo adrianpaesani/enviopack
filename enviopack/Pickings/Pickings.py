@@ -267,6 +267,8 @@ class Pickings(Enviopack):
     #TODO map resoponse to json
     picking = cls(auth, **response.json())
     picking.response = response.json()
+    picking.raw_response = response
+    picking.raw_request = response.request
     return picking
 
   def get_conditions(self):
@@ -285,6 +287,8 @@ class Pickings(Enviopack):
     response = requests.post(url, params={'access_token':self.access_token},json=params)
     respjson = response.json()
     self.response = respjson
+    self.raw_response = response
+    self.raw_request = response.request
     if response.status_code == 200:
       return respjson
     else: raise Exception('La solicitud fallo por favor revise los parametros')
@@ -314,7 +318,7 @@ class Pickings(Enviopack):
     url = "{base_url}{base_path}".format(base_url=self.base_request_url, base_path=self.base_request_path)
     response = requests.post(url, params={'access_token':self.auth.access_token},json=params)
     self.raw_response = response
-    print(response.request.body)
+    self.raw_request = response.request
     respjson = response.json()
     self.response = respjson
     self.id = respjson.get('id',False)
