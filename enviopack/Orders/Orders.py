@@ -2,6 +2,8 @@
 import datetime
 from typing import List
 
+from requests.models import Response
+
 from enviopack import Auth, Enviopack, Pickings
 from enviopack.constants import BASE_API_URL
 from requests import get, post, delete
@@ -78,8 +80,10 @@ class Orders(Enviopack):
   @classmethod
   def get(cls, auth:Auth, id:int):
     order = cls(auth)
-    order_vals = order.get_by_id(id, auth.access_token)
-    
+    order_response = order.get_by_id(id, auth.access_token)
+    order_vals = order_response.json()
+    order.raw_response = order_response
+    order.raw_request = order_response.request
     order._set_attributes_from_response(order_vals, {
     "empresa":'company',
     "provincia": "state",
@@ -143,13 +147,14 @@ class Orders(Enviopack):
     }) for order in orders]
 
   @staticmethod
-  def get_by_id(id, access_token) -> dict:
+  def get_by_id(id, access_token) -> Response:
     """
     GET /pedidos/[ID]
     """
     url = "{base_url}{base_path}/{id}".format(base_url=BASE_API_URL, base_path=base_path, id=id )
     response = get(url, {'access_token':access_token})
-    return response.json()
+
+    return response
   
   def get_pickings(self):
     """
